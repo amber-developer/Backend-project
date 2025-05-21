@@ -1,0 +1,20 @@
+FROM python:3.13-slim
+
+RUN rm -rf /etc/localtime
+RUN ln -fs /usr/share/zoneinfo/Asia/Calcutta /etc/localtime
+
+WORKDIR /app
+
+COPY ./backend/src/requirements.txt .
+
+RUN pip install --upgrade pip
+RUN pip install wheel setuptools
+RUN pip install debugpy
+RUN pip install -r requirements.txt
+
+ENV PYTHONPATH=/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Use Uvicorn to run the FastAPI application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

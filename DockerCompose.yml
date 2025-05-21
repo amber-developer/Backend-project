@@ -1,0 +1,50 @@
+services:
+    backend:
+        image: backend-app
+        container_name: backend-app
+        build:
+            context: .
+            dockerfile: Dockerfile.local
+        environment:
+            VSCODE_REMOTE_DEBUG: false
+        command: bash -c "
+            cd /app &&
+            pip install -r requirements.txt &&
+            uvicorn main:app --host=0.0.0.0 --port=8000 --reload"
+        links:
+            - db
+            - redis_session
+        depends_on:
+            - db
+            - redis_session
+        networks:
+            - backend-network
+        ports:
+            - "8000:8000"
+            - "5678:5678"
+        volumes:
+            - ./backend/src:/app
+    redis_session:
+        container_name: backend-redis-session
+        image: redis:7.2
+        volumes:
+            - ./.volumes/redis_session:/data
+        networks:
+            - backend-network
+    db:
+        image: postgres:17
+        container_name: backend-db
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: backend-dev
+            PGDATA: /var/lib/postgresql/data/pg_data/
+        ports:
+            - 5432:5432
+        volumes:
+            - ./.volumes/db/data/:/var/lib/postgresql/data/pg_data/
+        networks:
+            - backend-network
+networks:
+  backend-network:
+    external: true
